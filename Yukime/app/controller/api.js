@@ -1,25 +1,19 @@
-var express = require('express');
 var request = require('request');
 var rssReader = require('feed-read');
-var router = express.Router();
+var properties = require('../config/properties');
 
-/* GET home page. */
-router.get('/', function (req, res, next) {
-    res.render('index', {title: 'Express'});
-});
-
-router.get('/webhook', function (req, res) {
+exports.tokenVerification = function (req, res) {
     if (req.query['hub.mode'] === 'subscribe' &&
-        req.query['hub.verify_token'] === 'Yukime_Bot') {
+        req.query['hub.verify_token'] === properties.facebook_challenge) {
         console.log("Validating webhook");
         res.status(200).send(req.query['hub.challenge']);
     } else {
         console.error("Failed validation. Make sure the validation tokens match.");
         res.sendStatus(403);
     }
-});
+};
 
-router.post('/webhook', function (req, res) {
+exports.handleMessage = function (req, res) {
     var data = req.body;
 
     // Make sure this is a page subscription
@@ -52,7 +46,7 @@ router.post('/webhook', function (req, res) {
         // successfully received the callback. Otherwise, the request will time out.
         res.sendStatus(200);
     }
-});
+};
 
 function receivedMessage(event) {
     var senderID = event.sender.id;
@@ -85,7 +79,7 @@ function receivedMessage(event) {
                 break;
 
             case 'generic':
-                // sendGenericMessage(senderID);
+                sendGenericMessage(senderID);
                 break;
 
             case 'receipt':
@@ -94,7 +88,7 @@ function receivedMessage(event) {
 
             default:
                 getArticles(function (err, articles) {
-                    sendTextMessage(senderID, articles[0].title);
+                    sendTextMessage(senderID, articles[0]);
                 })
 
         }
@@ -126,8 +120,26 @@ function sendTextMessage(recipientId, messageText) {
             id: recipientId
         },
         message: {
-            text: messageText
+            attachment: {
+                type: "template",
+                payload: {
+                    template_type: "generic",
+                    elements: [
+                        {
+                            title: messageText.title,
+                            subtitle: messageText.published.toString(),
+                            item_url: messageText.link
+                        }
+                    ]
+                }
+            }
         }
+        // recipient: {
+        //     id: recipientId
+        // },
+        // message: {
+        //     text: messageText
+        // }
     };
 
     callSendAPI(messageData);
@@ -135,9 +147,9 @@ function sendTextMessage(recipientId, messageText) {
 
 function callSendAPI(messageData) {
     request({
-        uri: 'https://graph.facebook.com/v2.6/me/messages',
+        uri: properties.facebook_message_endpoint,
         // page access token
-        qs: {access_token: "EAAKE4QfyRdcBAG1J9skY9g31cxoJtZAmgVRoFZCwjEKBN9Fbv9NAmNnPyp3NFQXLQtlABjg8oV2BFHWEvt7hnuH9eZA3ZAaKOuZA2CYD93bcZCVGfaeSd00FZBGPFv4fwP8zZAhmgnHoveeTshhj58HlE6Wg9vNUDkVwnuAZB6ZCR1sgZDZD"},
+        qs: {access_token: properties.facebook_token},
         method: 'POST',
         json: messageData
 
@@ -171,4 +183,49 @@ function getArticles(callback) {
     })
 }
 
-module.exports = router;
+function sendGenericMessage(recipientId) {
+    var messageData = {
+        recipient: {
+            id: recipientId
+        },
+        message: {
+            attachment: {
+                type: "template",
+                payload: {
+                    template_type: "generic",
+                    elements: [{
+                        title: "rift",
+                        subtitle: "Next-generation virtual reality",
+                        item_url: "https://www.oculus.com/en-us/rift/",
+                        image_url: "http://messengerdemo.parseapp.com/img/rift.png",
+                        buttons: [{
+                            type: "web_url",
+                            url: "https://www.oculus.com/en-us/rift/",
+                            title: "Open Web URL"
+                        }, {
+                            type: "postback",
+                            title: "Call Postback",
+                            payload: "Payload for first bubble"
+                        }]
+                    }, {
+                        title: "touch",
+                        subtitle: "Your Hands, Now in VR",
+                        item_url: "https://www.oculus.com/en-us/touch/",
+                        image_url: "http://messengerdemo.parseapp.com/img/touch.png",
+                        buttons: [{
+                            type: "web_url",
+                            url: "https://www.oculus.com/en-us/touch/",
+                            title: "Open Web URL"
+                        }, {
+                            type: "postback",
+                            title: "Call Postback",
+                            payload: "Payload for second bubble"
+                        }]
+                    }]
+                }
+            }
+        }
+    };
+
+    callSendAPI(messageData);
+}
