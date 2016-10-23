@@ -1,6 +1,7 @@
 var request = require('request');
 var rssReader = require('feed-read');
 var properties = require('../config/properties');
+var User = require('../model/user');
 
 exports.tokenVerification = function (req, res) {
     if (req.query['hub.mode'] === 'subscribe' &&
@@ -93,10 +94,21 @@ function receivedMessage(event) {
                     } else {
                         var maxArticles = Math.min(articles.length, 5);
                         for (var i = 0; i < maxArticles; i++) {
-                            sendTextMessage(senderID, articles[i]);
+                            sendArticleMessage(senderID, articles[i]);
                         }
                     }
                 });
+                break;
+            case "/subscribe":
+                subscribeUser(senderID);
+                break;
+
+            case "/unsubscribe":
+                unsubscribeUser(senderID);
+                break;
+
+            case "/subscribestatus":
+                subscribeStatus(sender)
                 break;
 
             default:
@@ -104,7 +116,7 @@ function receivedMessage(event) {
                     if (err) {
                         console.log(err);
                     } else {
-                        sendTextMessage(senderID, articles[0]);
+                        sendArticleMessage(senderID, articles[0]);
                     }
                 })
 
@@ -137,6 +149,19 @@ function sendTextMessage(recipientId, messageText) {
             id: recipientId
         },
         message: {
+            text: messageText
+        }
+    };
+
+    callSendAPI(messageData);
+}
+
+function sendArticleMessage(recipientId, messageText) {
+    var messageData = {
+        recipient: {
+            id: recipientId
+        },
+        message: {
             attachment: {
                 type: "template",
                 payload: {
@@ -151,12 +176,6 @@ function sendTextMessage(recipientId, messageText) {
                 }
             }
         }
-        // recipient: {
-        //     id: recipientId
-        // },
-        // message: {
-        //     text: messageText
-        // }
     };
 
     callSendAPI(messageData);
@@ -245,4 +264,46 @@ function sendGenericMessage(recipientId) {
     };
 
     callSendAPI(messageData);
+}
+
+function subscribeUser(id) {
+    var newUser = new User({
+        fb_id: id
+    });
+
+    // call the built-in save method to save to the database
+    User.findOneAndUpdate({fb_id: newUser.fb_id}, {fb_id: newUser.fb_id}, {upsert: true}, function (err, user) {
+        if (err) {
+            sendTextMessage(id, "There wan error subscribing you for daily articles");
+        } else {
+            console.log('User saved successfully!');
+            sendTextMessage(newUser.fb_id, "You've been subscribed!")
+        }
+    });
+}
+
+function unsubscribeUser(id) {
+    User.findOneAndRemove({fb_id: id}, function (err, user) {
+        if (err) {
+            sendTextMessage(id, "There wan error unsubscribing you for daily articles");
+        } else {
+            console.log('User deleted successfully!');
+            sendTextMessage(id, "You've been unsubscribed!")
+        }
+    });
+}
+
+function subscribeStatus(id) {
+    User.findOne({fb_id: id}, function (err, user) {
+        subscribeStatus = false
+        if (err) {
+            console.log(err)
+        } else {
+            if (user != null) {
+                subscribeStatus = true
+            }
+            var subscribedText = "Your subscribed status is " + subscribeStatus
+            sendTextMessage(id, subscribedText)
+        }
+    })
 }

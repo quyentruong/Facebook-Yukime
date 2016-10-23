@@ -12,6 +12,8 @@
     "ejs": "~2.4.1",
     "express": "~4.13.4",
     "feed-read": "0.0.1",
+    "mongodb": "^2.2.11",
+    "mongoose": "^4.6.4",
     "morgan": "~1.7.0",
     "request": "^2.75.0",
     "rss-feed": "0.0.0",
