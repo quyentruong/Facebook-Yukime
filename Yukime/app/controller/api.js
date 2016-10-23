@@ -88,13 +88,13 @@ function receivedMessage(event) {
                 break;
 
             case 'showmore':
-                getArticles(function (err, articles) {
+                _getArticles(function (err, articles) {
                     if (err) {
                         console.log(err);
                     } else {
                         var maxArticles = Math.min(articles.length, 5);
                         for (var i = 0; i < maxArticles; i++) {
-                            sendArticleMessage(senderID, articles[i]);
+                            _sendArticleMessage(senderID, articles[i]);
                         }
                     }
                 });
@@ -112,11 +112,11 @@ function receivedMessage(event) {
                 break;
 
             default:
-                getArticles(function (err, articles) {
+                _getArticles(function (err, articles) {
                     if (err) {
                         console.log(err);
                     } else {
-                        sendArticleMessage(senderID, articles[0]);
+                        _sendArticleMessage(senderID, articles[0]);
                     }
                 })
 
@@ -156,7 +156,7 @@ function sendTextMessage(recipientId, messageText) {
     callSendAPI(messageData);
 }
 
-function sendArticleMessage(recipientId, messageText) {
+function _sendArticleMessage(recipientId, article) {
     var messageData = {
         recipient: {
             id: recipientId
@@ -168,9 +168,9 @@ function sendArticleMessage(recipientId, messageText) {
                     template_type: "generic",
                     elements: [
                         {
-                            title: messageText.title,
-                            subtitle: messageText.published.toString(),
-                            item_url: messageText.link
+                            title: article.title,
+                            subtitle: article.published.toString(),
+                            item_url: article.link
                         }
                     ]
                 }
@@ -179,6 +179,10 @@ function sendArticleMessage(recipientId, messageText) {
     };
 
     callSendAPI(messageData);
+}
+
+exports.sendArticleMessage = function (recipientId, article) {
+    _sendArticleMessage(recipientId, article);
 }
 
 function callSendAPI(messageData) {
@@ -205,7 +209,7 @@ function callSendAPI(messageData) {
 }
 
 
-function getArticles(callback) {
+function _getArticles(callback) {
     rssReader(properties.google_news_endpoint, function (err, articles) {
         if (err) {
             callback(err);
@@ -218,6 +222,10 @@ function getArticles(callback) {
         }
     })
 }
+
+exports.getArticles = function (callback) {
+    _getArticles(callback);
+};
 
 function sendGenericMessage(recipientId) {
     var messageData = {
@@ -293,16 +301,16 @@ function unsubscribeUser(id) {
 }
 
 function subscribeStatus(id) {
-    User.find({fb_id: id}, function (err, user) {
+    User.findOne({fb_id: id}, function (err, user) {
         console.log(user);
-        subscribeStatus = false;
+        var status = false;
         if (err) {
             console.log(err);
         } else {
             if (user != null) {
-                subscribeStatus = true;
+                status = true;
             }
-            var subscribedText = "Your subscribed status is " + subscribeStatus;
+            var subscribedText = "Your subscribed status is " + status;
             sendTextMessage(id, subscribedText);
         }
     })
