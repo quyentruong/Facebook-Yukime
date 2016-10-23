@@ -2,6 +2,8 @@ var request = require('request');
 var rssReader = require('feed-read');
 var properties = require('../config/properties');
 var User = require('../model/user');
+var emoji = require('node-emoji');
+var yukime_res = require("../../Yukime_res.json");
 
 exports.tokenVerification = function (req, res) {
     if (req.query['hub.mode'] === 'subscribe' &&
@@ -28,7 +30,7 @@ exports.handleMessage = function (req, res) {
             // Iterate over each messaging event
             pageEntry.messaging.forEach(function (messagingEvent) {
                 if (messagingEvent.optin) {
-                    // receivedAuthentication(messagingEvent);
+                    receivedAuthentication(messagingEvent);
                 } else if (messagingEvent.message) {
                     receivedMessage(messagingEvent);
                 } else if (messagingEvent.delivery) {
@@ -113,7 +115,7 @@ function receivedMessage(event) {
 
             default:
                 callWitAI(messageText, function (err, intent) {
-                    handleIntent(intent,senderID);
+                    handleIntent(intent, senderID);
                 });
             // _getArticles(function (err, articles) {
             //     if (err) {
@@ -135,7 +137,7 @@ function handleIntent(intent, recipientId) {
         //     sendTextMessage(sender, "Today a man knocked on my door and asked for a small donation towards the local swimming pool. I gave him a glass of water.")
         //     break;
         case "greeting":
-            sendTextMessage(recipientId, "Hi!");
+            sendTextMessage(recipientId, yukime_res.greeting[getRandomIntInclusive(1, 4)] + emoji.get('blush'));
             break;
         case "identification":
             sendTextMessage(recipientId, "I'm Yukime.");
@@ -174,7 +176,7 @@ function handleIntent(intent, recipientId) {
             });
             break;
         default:
-            sendTextMessage(recipientId, "I'm still learning honey \xF0\x9F\x98\x98");
+            sendTextMessage(recipientId, yukime_res.default[getRandomIntInclusive(1, 3)]);
             break;
 
     }
@@ -392,4 +394,10 @@ function callWitAI(query, callback) {
             callback(error)
         }
     });
+}
+
+function getRandomIntInclusive(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return (Math.floor(Math.random() * (max - min + 1)) + min).toString();
 }

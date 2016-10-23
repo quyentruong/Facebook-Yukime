@@ -1,0 +1,13 @@
+{
+  "default": {
+    "1": "I'm still learning ",
+    "2": "I will get better ",
+    "3": "Can you teach me more ?"
+  },
+  "greeting": {
+    "1": "Hey there!",
+    "2": "What’s up?",
+    "3": "How’s your day?",
+    "4": "Good to see you?"
+  }
+}

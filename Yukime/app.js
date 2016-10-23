@@ -21,7 +21,8 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 // mongodb
-mongoose.connect('mongodb://localhost/myappdatabase');
+// mongoose.connect('mongodb://localhost/myappdatabase');
+mongoose.connect('mongodb://heroku_fbwc82zx:q18t79ksripeahbt5q9vpivujn@ds063946.mlab.com:63946/heroku_fbwc82zx');
 
 var j = schedule.scheduleJob('* * 9 * * *', function () {
     User.find({}, function (err, users) {
