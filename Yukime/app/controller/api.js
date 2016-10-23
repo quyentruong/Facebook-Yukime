@@ -108,7 +108,7 @@ function receivedMessage(event) {
                 break;
 
             case "/subscribestatus":
-                subscribeStatus(sender)
+                subscribeStatus(senderID);
                 break;
 
             default:
@@ -204,9 +204,9 @@ function callSendAPI(messageData) {
     });
 }
 
-var googleNewsEndPoint = "https://news.google.com/news?output=rss";
+
 function getArticles(callback) {
-    rssReader(googleNewsEndPoint, function (err, articles) {
+    rssReader(properties.google_news_endpoint, function (err, articles) {
         if (err) {
             callback(err);
         } else {
@@ -271,13 +271,12 @@ function subscribeUser(id) {
         fb_id: id
     });
 
-    // call the built-in save method to save to the database
     User.findOneAndUpdate({fb_id: newUser.fb_id}, {fb_id: newUser.fb_id}, {upsert: true}, function (err, user) {
         if (err) {
-            sendTextMessage(id, "There wan error subscribing you for daily articles");
+            sendTextMessage(id, "There was error subscibing you for daily articles");
         } else {
             console.log('User saved successfully!');
-            sendTextMessage(newUser.fb_id, "You've been subscribed!")
+            sendTextMessage(newUser.fb_id, "You've been subcribed");
         }
     });
 }
@@ -285,25 +284,26 @@ function subscribeUser(id) {
 function unsubscribeUser(id) {
     User.findOneAndRemove({fb_id: id}, function (err, user) {
         if (err) {
-            sendTextMessage(id, "There wan error unsubscribing you for daily articles");
+            sendTextMessage(id, "There was error unsubscibing you for daily articles");
         } else {
-            console.log('User deleted successfully!');
-            sendTextMessage(id, "You've been unsubscribed!")
+            console.log('User saved successfully!');
+            sendTextMessage(id, "You've been unsubcribed");
         }
     });
 }
 
 function subscribeStatus(id) {
-    User.findOne({fb_id: id}, function (err, user) {
-        subscribeStatus = false
+    User.find({fb_id: id}, function (err, user) {
+        console.log(user);
+        subscribeStatus = false;
         if (err) {
-            console.log(err)
+            console.log(err);
         } else {
             if (user != null) {
-                subscribeStatus = true
+                subscribeStatus = true;
             }
-            var subscribedText = "Your subscribed status is " + subscribeStatus
-            sendTextMessage(id, subscribedText)
+            var subscribedText = "Your subscribed status is " + subscribeStatus;
+            sendTextMessage(id, subscribedText);
         }
     })
 }
