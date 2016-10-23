@@ -69,7 +69,7 @@ function receivedMessage(event) {
         // If we receive a text message, check to see if it matches any special
         // keywords and send back the corresponding example. Otherwise, just echo
         // the text we received.
-        switch (messageText) {
+        switch (messageText.toLowerCase().replace(' ', '')) {
             case 'image':
                 // sendImageMessage(senderID);
                 break;
@@ -86,9 +86,26 @@ function receivedMessage(event) {
                 // sendReceiptMessage(senderID);
                 break;
 
+            case 'showmore':
+                getArticles(function (err, articles) {
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        var maxArticles = Math.min(articles.length, 5);
+                        for (var i = 0; i < maxArticles; i++) {
+                            sendTextMessage(senderID, articles[i]);
+                        }
+                    }
+                });
+                break;
+
             default:
                 getArticles(function (err, articles) {
-                    sendTextMessage(senderID, articles[0]);
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        sendTextMessage(senderID, articles[0]);
+                    }
                 })
 
         }
