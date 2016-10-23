@@ -23,7 +23,7 @@ app.set('view engine', 'ejs');
 // mongodb
 mongoose.connect('mongodb://localhost/myappdatabase');
 
-var j = schedule.scheduleJob('20 * * * * *', function () {
+var j = schedule.scheduleJob('* * 9 * * *', function () {
     User.find({}, function (err, users) {
         if (users != null) {
             apiController.getArticles(function (err, articles) {

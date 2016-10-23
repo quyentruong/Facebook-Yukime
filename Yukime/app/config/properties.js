@@ -5,3 +5,8 @@ exports.facebook_challenge = 'Yukime_Bot';
 exports.facebook_message_endpoint = 'https://graph.facebook.com/v2.6/me/messages';
 // News
 exports.google_news_endpoint = "https://news.google.com/news?output=rss";
+
+/** Wit.ai */
+// exports.wit_token = process.env.WIT_TOKEN;
+exports.wit_token = "4PLADIDFAJDXHCAPJO3QKWVAJPTGOWWH";
+exports.wit_endpoint = 'https://api.wit.ai/message?v=20161023&q=';

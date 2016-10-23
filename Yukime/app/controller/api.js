@@ -112,17 +112,71 @@ function receivedMessage(event) {
                 break;
 
             default:
-                _getArticles(function (err, articles) {
-                    if (err) {
-                        console.log(err);
-                    } else {
-                        _sendArticleMessage(senderID, articles[0]);
-                    }
-                })
+                callWitAI(messageText, function (err, intent) {
+                    handleIntent(intent,senderID);
+                });
+            // _getArticles(function (err, articles) {
+            //     if (err) {
+            //         console.log(err);
+            //     } else {
+            //         _sendArticleMessage(senderID, articles[0]);
+            //     }
+            // })
 
         }
     } else if (messageAttachments) {
         sendTextMessage(senderID, "Message with attachment received");
+    }
+}
+
+function handleIntent(intent, recipientId) {
+    switch (intent) {
+        // case "jokes":
+        //     sendTextMessage(sender, "Today a man knocked on my door and asked for a small donation towards the local swimming pool. I gave him a glass of water.")
+        //     break;
+        case "greeting":
+            sendTextMessage(recipientId, "Hi!");
+            break;
+        case "identification":
+            sendTextMessage(recipientId, "I'm Yukime.");
+            break;
+        case "more news":
+            _getArticles(function (err, articles) {
+                if (err) {
+                    console.log(err);
+                } else {
+                    sendTextMessage(recipientId, "How about these?");
+                    var maxArticles = Math.min(articles.length, 5);
+                    for (var i = 0; i < maxArticles; i++) {
+                        _sendArticleMessage(recipientId, articles[i]);
+                    }
+                }
+            });
+            break;
+        case "general news":
+            _getArticles(function (err, articles) {
+                if (err) {
+                    console.log(err);
+                } else {
+                    sendTextMessage(recipientId, "Here's what I found...");
+                    _sendArticleMessage(recipientId, articles[0]);
+                }
+            });
+            break;
+        case "local news":
+            _getArticles(function (err, articles) {
+                if (err) {
+                    console.log(err);
+                } else {
+                    sendTextMessage(recipientId, "I don't know local news yet, but I found these...");
+                    _sendArticleMessage(recipientId, articles[0]);
+                }
+            });
+            break;
+        default:
+            sendTextMessage(recipientId, "I'm still learning honey \xF0\x9F\x98\x98");
+            break;
+
     }
 }
 
@@ -314,4 +368,28 @@ function subscribeStatus(id) {
             sendTextMessage(id, subscribedText);
         }
     })
+}
+
+function callWitAI(query, callback) {
+    query = encodeURIComponent(query);
+    request({
+        uri: properties.wit_endpoint + query,
+        qs: {access_token: properties.wit_token},
+        method: 'GET'
+    }, function (error, response, body) {
+        if (!error && response.statusCode == 200) {
+            console.log("Successfully got %s", response.body);
+            try {
+                body = JSON.parse(response.body)
+                var intent = body["entities"]["intent"][0]["value"]
+                callback(null, intent)
+            } catch (e) {
+                callback(e)
+            }
+        } else {
+            console.log(response.statusCode)
+            console.error("Unable to send message. %s", error);
+            callback(error)
+        }
+    });
 }
